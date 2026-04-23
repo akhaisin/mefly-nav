@@ -14,7 +14,7 @@ export function MeflyNav({ items, activeId, style, activationMode = 'click', onS
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // Click-outside and ESC only apply in click mode; hover mode closes via onMouseLeave.
+  // Click-outside and ESC only apply in click mode.
   useEffect(() => {
     if (!open || activationMode !== 'click') return;
     function onMouseDown(e: MouseEvent) {
@@ -31,8 +31,21 @@ export function MeflyNav({ items, activeId, style, activationMode = 'click', onS
     };
   }, [open, activationMode]);
 
-  const handleMouseEnter = activationMode === 'hover' ? () => setOpen(true) : undefined;
-  const handleMouseLeave = activationMode === 'hover' ? () => setOpen(false) : undefined;
+  // Use native mouseenter/mouseleave for hover mode. React's synthetic
+  // onMouseEnter goes through event delegation which can be unreliable inside
+  // Astro islands (separate React roots per island).
+  useEffect(() => {
+    if (activationMode !== 'hover' || !rootRef.current) return;
+    const el = rootRef.current;
+    const onEnter = () => setOpen(true);
+    const onLeave = () => setOpen(false);
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    return () => {
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+    };
+  }, [activationMode]);
 
   function handleItemClick(e: React.MouseEvent, item: MeflyNavItem) {
     if (onSelect) {
@@ -43,13 +56,7 @@ export function MeflyNav({ items, activeId, style, activationMode = 'click', onS
   }
 
   return (
-    <div
-      ref={rootRef}
-      className={styles.root}
-      style={style}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div ref={rootRef} className={styles.root} style={style}>
       {open && (
         <ul className={styles.menu}>
           {items.map((item) => (
@@ -81,7 +88,7 @@ export function MeflyNav({ items, activeId, style, activationMode = 'click', onS
       )}
       <button
         className={styles.trigger}
-        onClick={() => setOpen((o) => !o)}
+        onClick={activationMode === 'click' ? () => setOpen((o) => !o) : undefined}
         aria-label="Open navigation menu"
         aria-expanded={open}
       >

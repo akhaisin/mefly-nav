@@ -13,12 +13,14 @@ interface Props {
   trustedOrigins?: string[];
   allowLocalhost?: boolean;
   style?: React.CSSProperties;
+  activationMode?: 'click' | 'hover';
 }
 
 export function MeflyNavReceiver({
   trustedOrigins = DEFAULT_TRUSTED_ORIGINS,
   allowLocalhost = true,
   style,
+  activationMode,
 }: Props) {
   const [state, setState] = useState<{ items: MeflyNavItem[]; activeId: string } | null>(null);
 
@@ -49,6 +51,7 @@ export function MeflyNavReceiver({
       items={state.items}
       activeId={state.activeId}
       style={style}
+      activationMode={activationMode}
       onSelect={isEmbedded ? handleSelect : undefined}
     />
   );

@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, act, cleanup } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, act, cleanup, screen } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { useHostSync } from '../useHostSync';
+
+function LocationDisplay() {
+  const loc = useLocation();
+  return <span data-testid="path">{loc.pathname}</span>;
+}
 
 function TestComponent({
   trustedOrigins,
@@ -80,6 +85,29 @@ describe('useHostSync', () => {
       );
       postMessage({ type: 'NAVIGATE_TO_HASH', hash: '#evil' }, 'https://evil.com');
       expect(window.location.hash).toBe('');
+    });
+
+    it('calls React Router navigate when hash value is a pathname', () => {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <TestComponent />
+          <LocationDisplay />
+        </MemoryRouter>,
+      );
+      postMessage({ type: 'NAVIGATE_TO_HASH', hash: '/exercises/useState' });
+      expect(screen.getByTestId('path').textContent).toBe('/exercises/useState');
+      expect(window.location.hash).toBe('');
+    });
+
+    it('calls React Router navigate when hash value has a leading #/', () => {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <TestComponent />
+          <LocationDisplay />
+        </MemoryRouter>,
+      );
+      postMessage({ type: 'NAVIGATE_TO_HASH', hash: '#/exercises/useEffect' });
+      expect(screen.getByTestId('path').textContent).toBe('/exercises/useEffect');
     });
 
     it('ignores messages with unknown type', () => {

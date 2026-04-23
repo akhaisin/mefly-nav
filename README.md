@@ -17,7 +17,7 @@ pnpm add github:akhaisin/mefly-nav
 To pin a specific release:
 
 ```bash
-pnpm add github:akhaisin/mefly-nav#v0.1.0
+pnpm add github:akhaisin/mefly-nav#v0.1.1
 ```
 
 Import the stylesheet once in your app:
